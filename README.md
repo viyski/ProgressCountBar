@@ -1,6 +1,7 @@
 # ProgressCountBar
 倒计时圆形进度条
-！[a](http://a1.qpic.cn/psb?/V11WPquW4fh3Fe/x*ekJDNJRhjGwcZfl*Toa2XWJmy2oLaetNr.JdH3Yks!/b/dGgBAAAAAAAA&bo=0AIABQAAAAAFB*M!&rf=viewer_4)
+
+![a](http://a1.qpic.cn/psb?/V11WPquW4fh3Fe/x*ekJDNJRhjGwcZfl*Toa2XWJmy2oLaetNr.JdH3Yks!/b/dGgBAAAAAAAA&bo=0AIABQAAAAAFB*M!&rf=viewer_4)
 
 
 >xml
