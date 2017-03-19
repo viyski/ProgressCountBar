@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <declare-styleable name="ProgressCountBar">
+        <attr name="strokeWidth" format="dimension"/>
+        <attr name="circleRadius" format="dimension"/>
+        <attr name="circleColor" format="color"/>
+        <attr name="progressColor" format="color"/>
+        <attr name="backgroundColor" format="color"/>
+        <attr name="progressDuration" format="integer"/>
+        <attr name="countTextSize" format="dimension"/>
+    </declare-styleable>
+
+</resources>
