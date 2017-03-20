@@ -42,6 +42,7 @@ public class ProgressCountBar extends View {
     private static final int STATE_INIT = 0;
     private static final int STATE_DRAWING = 1;
     private static final int STATE_FINISH = 2;
+    private boolean hasStarted;
 
     public ProgressCountBar(Context context) {
         this(context, null);
@@ -106,46 +107,56 @@ public class ProgressCountBar extends View {
 
     }
 
-    public void start() {
+    public void start(int duration) {
+        mProgressDuration = duration;
         countTimer = new CountTimer(mProgressDuration * 1000, 1000);
-        countTimer.start();
+        if (!hasStarted) {
+            countTimer.start();
+            hasStarted = true;
+        }
     }
 
     public void setProgressUpdateListener(ProgressUpdateListener listener) {
         mListener = listener;
     }
 
+    public void cancelTick(){
+        mState = STATE_INIT;
+        if (countTimer != null && hasStarted){
+            countTimer.cancel();
+        }
+    }
+
     @Override
     public void draw(Canvas canvas) {
         super.draw(canvas);
 
-        float lenText = mTextPaint.measureText(mCurrentDuration + "");
+        float lenText = mTextPaint.measureText(mCurrentDuration + "s");
         Paint.FontMetrics fontMetrics = mTextPaint.getFontMetrics();
         float heightText = fontMetrics.bottom - fontMetrics.top;
 
         switch (mState){
             case STATE_INIT:
+                canvas.drawCircle(mCenterX, mCenterY, mCircleRadius - 2 , mBackgroundPaint);
+                canvas.drawCircle(mCenterX, mCenterY, mCircleRadius, mCirclePaint);
+                if (mProgressDuration != 300) {
+                    float saveSwipeAngle = (300 - mProgressDuration) * mRadio;
+                    canvas.drawArc(mCircleBounds, -90, 360 - saveSwipeAngle, false, mProgressPaint);
+                }else{
+                    canvas.drawArc(mCircleBounds, 0, 0, false, mProgressPaint);
+                }
+                canvas.drawText(mCurrentDuration + "s", mCenterX - lenText / 2, mCenterY + heightText / 3, mTextPaint);
                 break;
             case STATE_DRAWING:
                 canvas.drawCircle(mCenterX, mCenterY, mCircleRadius - 2 , mBackgroundPaint);
                 canvas.drawCircle(mCenterX, mCenterY, mCircleRadius, mCirclePaint);
-
                 mSwipeAngle = 360 - mRadio * mCurrentDuration;
                 canvas.drawArc(mCircleBounds, -90, mSwipeAngle, false, mProgressPaint);
-                canvas.drawText(String.valueOf(mCurrentDuration), mCenterX - lenText / 2, mCenterY + heightText / 3, mTextPaint);
+                canvas.drawText(mCurrentDuration + "s", mCenterX - lenText / 2, mCenterY + heightText / 3, mTextPaint);
                 break;
             case STATE_FINISH:
-                canvas.drawCircle(mCenterX, mCenterY, mCircleRadius - 2 , mBackgroundPaint);
-                canvas.drawCircle(mCenterX, mCenterY, mCircleRadius, mCirclePaint);
-
-                canvas.drawArc(mCircleBounds, 0, 360, false, mProgressPaint);
-                canvas.drawText("", mCenterX - lenText / 2, mCenterY + heightText / 3, mTextPaint);
                 break;
         }
-    }
-
-    public void reset(){
-        mState = STATE_INIT;
     }
 
     class CountTimer extends CountDownTimer {
@@ -165,6 +176,7 @@ public class ProgressCountBar extends View {
         @Override
         public void onFinish() {
             mState = STATE_FINISH;
+            hasStarted = false;
             if (mListener != null) mListener.onFinish();
             invalidate();
         }

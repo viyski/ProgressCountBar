@@ -30,12 +30,19 @@
             app:circleRadius="48dp"
             app:progressColor="@android:color/holo_blue_dark"
             android:layout_gravity="center"
-            app:progressDuration="100"
             app:strokeWidth="6dp"
             app:countTextSize="16sp"/>
 
 
     </FrameLayout>
+
+
+    <SeekBar
+        android:id="@+id/seekBar"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_above="@+id/tick_tv"
+        android:layout_margin="6dp"/>
 
 
     <TextView

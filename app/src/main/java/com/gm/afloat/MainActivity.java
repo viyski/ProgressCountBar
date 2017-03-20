@@ -7,6 +7,7 @@ import android.content.IntentFilter;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.view.View;
+import android.widget.SeekBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -18,12 +19,31 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private ProgressCountBar bar;
     private TextView tickTv;
     private int count;
+    private SeekBar seekBar;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        seekBar = (SeekBar) findViewById(R.id.seekBar);
+        seekBar.setMax(300);
+        seekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+            @Override
+            public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+                tickTv.setText(progress + "s Click to Start");
+            }
+
+            @Override
+            public void onStartTrackingTouch(SeekBar seekBar) {
+
+            }
+
+            @Override
+            public void onStopTrackingTouch(SeekBar seekBar) {
+
+            }
+        });
         tickTv = (TextView) findViewById(R.id.tick_tv);
         assert tickTv != null;
         tickTv.setOnClickListener(this);
@@ -50,10 +70,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     @Override
     public void onClick(View v) {
-        if (count == 0 ) {
-            count++;
-            bar.start();
-        }
+        int progress = seekBar.getProgress();
+        bar.start(progress);
     }
 
     private class HomeReceiver extends BroadcastReceiver {
