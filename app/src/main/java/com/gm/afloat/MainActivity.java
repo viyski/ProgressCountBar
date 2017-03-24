@@ -105,6 +105,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     @Override
     public void onDestroy() {
         unregisterReceiver(receiver);
+        bar.cancel();
         super.onDestroy();
     }
 

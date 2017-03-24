@@ -6,7 +6,9 @@ import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.RectF;
-import android.os.CountDownTimer;
+import android.os.Handler;
+import android.os.Message;
+import android.os.SystemClock;
 import android.util.AttributeSet;
 import android.view.View;
 
@@ -36,13 +38,14 @@ public class ProgressCountBar extends View {
     private float mSwipeAngle;
     private float mRadio;
     private ProgressUpdateListener mListener;
-    private CountTimer countTimer;
 
     private int mState = STATE_INIT;
     private static final int STATE_INIT = 0;
     private static final int STATE_DRAWING = 1;
     private static final int STATE_FINISH = 2;
     private boolean hasStarted;
+    private boolean mCancelled;
+    private long mStopTimeInFuture;
 
     public ProgressCountBar(Context context) {
         this(context, null);
@@ -107,26 +110,6 @@ public class ProgressCountBar extends View {
 
     }
 
-    public void start(int duration) {
-        mProgressDuration = duration;
-        countTimer = new CountTimer(mProgressDuration * 1000, 1000);
-        if (!hasStarted) {
-            countTimer.start();
-            hasStarted = true;
-        }
-    }
-
-    public void setProgressUpdateListener(ProgressUpdateListener listener) {
-        mListener = listener;
-    }
-
-    public void cancelTick(){
-        mState = STATE_INIT;
-        if (countTimer != null && hasStarted){
-            countTimer.cancel();
-        }
-    }
-
     @Override
     public void draw(Canvas canvas) {
         super.draw(canvas);
@@ -159,27 +142,72 @@ public class ProgressCountBar extends View {
         }
     }
 
-    class CountTimer extends CountDownTimer {
+    public synchronized final void cancel() {
+        mState = STATE_INIT;
+        mCancelled = true;
+        mHandler.removeCallbacksAndMessages(null);
+    }
 
-        public CountTimer(long millisInFuture, long countDownInterval) {
-            super(millisInFuture, countDownInterval);
+    public synchronized final void start(int time) {
+        mProgressDuration = time;
+        if (!hasStarted) {
+            mCancelled = false;
+            if (mProgressDuration <= 0) {
+                onFinish();
+            }
+            mStopTimeInFuture = SystemClock.elapsedRealtime() + mProgressDuration * 1000;
+            mHandler.sendMessage(mHandler.obtainMessage(MSG));
         }
+    }
+
+
+    private static final int MSG = 1;
+
+    private long mCountdownInterval = 1000;
+
+    private Handler mHandler = new Handler() {
 
         @Override
-        public void onTick(long millisUntilFinished) {
-            mState = STATE_DRAWING;
-            mCurrentDuration = (int) (millisUntilFinished / 1000);
-            if (mListener != null) mListener.onTick(mCurrentDuration);
-            invalidate();
-        }
+        public void handleMessage(Message msg) {
 
-        @Override
-        public void onFinish() {
-            mState = STATE_FINISH;
-            hasStarted = false;
-            if (mListener != null) mListener.onFinish();
-            invalidate();
+            synchronized (ProgressCountBar.this) {
+                if (mCancelled) {
+                    return;
+                }
+
+                final long millisLeft = mStopTimeInFuture - SystemClock.elapsedRealtime();
+
+                if (millisLeft <= 0) {
+                    onFinish();
+                } else if (millisLeft < mCountdownInterval) {
+                    sendMessageDelayed(obtainMessage(MSG), millisLeft);
+                } else {
+                    long lastTickStart = SystemClock.elapsedRealtime();
+                    onTick(millisLeft);
+                    long delay = lastTickStart + mCountdownInterval - SystemClock.elapsedRealtime();
+                    while (delay < 0) delay += mCountdownInterval;
+                    sendMessageDelayed(obtainMessage(MSG), delay);
+                }
+            }
         }
+    };
+
+    public void onTick(long millisUntilFinished) {
+        mState = STATE_DRAWING;
+        mCurrentDuration = (int) (millisUntilFinished / 1000);
+        if (mListener != null) mListener.onTick(mCurrentDuration);
+        invalidate();
+    }
+
+    public void onFinish() {
+        mState = STATE_FINISH;
+        hasStarted = false;
+        if (mListener != null) mListener.onFinish();
+        invalidate();
+    }
+
+    public void setProgressUpdateListener(ProgressUpdateListener listener) {
+        mListener = listener;
     }
 
     public interface ProgressUpdateListener {
